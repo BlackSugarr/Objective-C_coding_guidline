@@ -13,7 +13,7 @@
 		}
 在 `-` 和 `（void）` 之间应该又一个空格，第一个大括号 `{` 的位置在函数所在行的末尾，同样应该有一个空格。
 如果一个行数有特别多的参数或者名称很长，应该将其按照 `:` 来对齐，分行显示。<br/>
-在分行时，如果第一段名称果断，后续名称可以以 Tab 的长度（4个空格）为单位进行缩进。<br/>
+在分行时，如果第一段名称过短，后续名称可以以 Tab 的长度（4个空格）为单位进行缩进。<br/>
 - **函数调用**<br/>
   函数调用的格式和书写差不多，可以按照函数的长短来选择写在一行或者分成多行<br/>
 - **@public和@private标记符**？？？？？<br/>
@@ -113,7 +113,40 @@
 	为什么Objective-C中不适用get前缀来表示属性获取方法？因为get在Objective-C中通常指用来表示从函数指针返回值的函数
 
 - **命名委托(Delegate)**<br/>
-
+	当特定的事件发生时，对象会触发它注册的委托方法。
+	委托是Objective-C中常用的传递消息的方式。
+	委托有它固定的命名范式。<br/>
+	一个委托方法的第一个参数是触发它的对象，第一个关键词是触发对象的类名，除非委托方法只有一个名为`sender`的参数。<br/>
+	根据委托方法触发的时机和目的，使用`should`，`will`，`did`等关键词。
+	
+- **集合操作类方法（Collection Methods）**<br/>
+	有些对象管理着一系列其他对象或者元素的集合，需要使用类似“增删查改”的方法来对集合进行操作，这些方法的命名范式一般为：
+		
+		//集合操作范式
+		- (void)addElement:(elementType)anObj;
+		- (void)removeElement:(elementType)anObj;
+		- (NSArray *)elements;
+		
+		//栗子
+		- (void)addLayoutManager:(NSLayoutManager *)obj;
+		- (void)removeLayoutManager:(NSLayoutManager *)obj;
+		- (NSArray *)layoutManagers;
+	注意，如果返回的集合是无序的，使用`NSSet`来代替`NSArray`。<br/>
+	如果需要将元素插入到特定的位置，使用类似于这样的命名：
+		
+		- (void)insertLayoutManager:(NSLayoutManager *)obj atIndex:(int) index;
+		- (void)removeLayoutManagerAtIndex:(int)index;
+	如果管理的集合元素中有指向管理对象的指针，要设置成`weak`类型以防止循环引用。
+	
+- **命名函数（Functions）**<br/>
+	函数的命名和方法有一些不同，主要是：
+	- 函数名称一般带有缩写前缀，表示方法所在的框架
+	- 前缀后的单词以“驼峰”表示法显示，第一个单词首字母大写
+	
+	函数名的第一个单词通常是一个动词，表示方法执行的操作，如`NSDealocateObject`<br/>
+	如果函数返回其参数的某个属性，省略动词，如`float NSHeight(NSRect aRect)`<br/>
+	如果函数通过指针参数来返回值，需要在函数名中使用`Get`，如`const char *NSGetSizeAndAlignment(...)`<br/>
+	函数的返回类型是BOOL时的命名，`BOOL NSDecimalIsNotANumber(const NSDecimal *decimal)`
 
 
 ***
