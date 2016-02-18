@@ -148,6 +148,186 @@
 	如果函数通过指针参数来返回值，需要在函数名中使用`Get`，如`const char *NSGetSizeAndAlignment(...)`<br/>
 	函数的返回类型是BOOL时的命名，`BOOL NSDecimalIsNotANumber(const NSDecimal *decimal)`
 
+- **命名属性和实例变量（properties&Instance variables）**<br/>
+	属性和对象的存取方法相关联，属性的第一个字母小写，后续单词首字母大写，不必添加前缀。<br/>
+	属性按功能命名成名词或者动词
+		
+		//名词属性
+		@property (strong) NSString *title;
+		//动词属性
+		@property (assign) BOOL showsAlpha;
+	
+	属性也可以命名成形容词，这时候通常会指定一个带有is前缀的get方法来提高可读性
+		
+		@property (assign, getter=isEditable) BOOL editable;
+		
+	命名实例变量，在变量前加上 `—` 前缀，其他和命名属性一样
+	
+		@implement MyClass {
+			BOOL _showsTitle;
+		}
+	
+	一般来说，类需要对使用者隐藏数据存储的细节，所以不要将实例方法定义成公共可访问的接口，可以使用 `@private`，`@protected`前缀<br/>
+	*按照苹果的说法，不建议在除了init和dealloc方法以外的地方直接访问实例变量，但很多人认为直接访问会让代码更加清晰可读，只在需要计算或者执行操作的时候才使用存取方法访问*<br/>
+	
+- **命名常量（Constants）**<br/>
+	如果要定义一组相关的常量，尽量使用枚举类型（enumerations），枚举类型的命名规则和函数命名规则相同。建议使用NS_ENUM和NS_OPTIONS宏来定义枚举类型。
+		
+		//定义一个枚举
+		typedef NS_ENUM(NSInteger, NSMatrixMode) {
+			NSRadioModeMatrix,
+			NSHighlightModeMatrix,
+			NSListModeMatrix,
+			NSTrackModeMatrix
+		};
+	定义bit map
+		
+		typedef NS_OPTIONS(NSUInteger, NSWindowMask) {
+			NSBorderlessWindowMask      = 0,
+			NSTitleWindowMask           = 1 << 0,
+			NSClosableWindowMask        = 1 << 1,
+			NSMiniaturizableWindowMask  = 1 << 2,
+			NSResizableWindowMask       = 1 << 3
+		};
+	使用 const 定义浮点型或者单个的整数型常量，如果要定义一组相关的整数常量，应该优先使用美剧。常量的命名规范和函数相同
+		
+		const float NSLightGray;
+	不要使用#define宏来定义常量，如果是整型变量，尽量使用美剧，浮点型常量，使用const定义。#define通常用来给编译器巨鼎是否编译某块代码，如常用的
+		
+		#ifdef DEBUG
+		
+	注意到一般由编译器定义的宏会在前后都有一个 `__` , 比如 `__MACH__`
+	
+- **命名通知（Notifications）**<br/>
+	通知常用语在模块间传递消息，所以通知要尽可能地表示出放生的事件，通知的命名范式是
+		
+		[触发通知的类名] + [Did | Will] + [动作] + Notification
+		//栗子
+		NSApplicaitonDidBecomActiveNotification
+		NSWindowDidMiniaturizaNotificaiton
+		NSTextViewDidChangeSelectionNotification
+
+***
+##**注释**
+
+好的注释不仅能让人轻松读懂你的程序，还能提升代码逼格<br/>
+
+- **文件注释**<br/>
+	每一个文件都必须写文件注释，文件注释通常包含
+	- 文件所在模块
+	- 作者信息
+	- 历史版本信息
+	- 版权信息
+	- 文件包含的内容，作用
+	文件注释的格式通常不作要求，能清晰易读就可以了，但在整个工程中峰峰要统一。
+
+- **代码注释**<br/>
+	好的代码应该是“自解释”（self-documenting）的，但仍然需要详细的注释来说明参数的意义，返回值，功能以及可能的副作用。<br/>
+	方法，函数，类，协议，类别的定义都需要注释，推荐采用Apple的标准注释风格，好处是可以在引用的地方`alt+点击`自动弹出注释，很方便<br/>
+	有很多可以自动生成注释格式的插件，推荐使用VVDocument
+	如果在注释中要引用参数名或者方法函数名，使用`||`将参数或者方法括起来以避免歧义
+		
+		// Remember to call |StringWithoutSpaces("foo bar bax")|
+	
+	定义在头文件里的接口方法，属性必须有注释
+
+***
+##**编码风格**
+每个人都有自己的编码风格，这里总结一些比较好的Cocoa编程风格和注意点<br/>
+- **不要使用new方法**<br/>
+	尽管很多时候能用`new`代替`alloc init`方法，但这可能会导致调试内存时出现不可预料的问题
+
+- **Public API要尽量简洁**<br/>
+	共有接口要设计的简洁，满足核心的功能需求就可以了。不要设计很少会被用到，但是参数及其复杂的API。如果要定义复杂的方法，使用类别或者类扩展。
+	
+- **#import和#include**<br/>	
+	`#mport`是Cocoa中常用的引用头文件的方式，它能自耦东防止重复引用文件
+	- 当引用的是一个Objective-C或者Objective-C++的头文件时，使用#import
+	- 当引用的是一个C或者C++的头文件是，使用#include，这是必须要保证被引用的文件提供了保护域（#define guard）
+			
+			//栗子
+			#import <Cocoa/Cocoa.h>
+			#include <CoreFoundation/CoreFoundation.h>
+			#import "GTMFoo.h"
+			#include "base/basictypes.h"
+	为什么不全使用#import？主要是是为了保证代码在不同平台间共享时不出现问题
+	
+- **引用框架的根头文件**<br/>
+	每一个框架都会有一个和框架同名的头文件，它包含了框架内接口的所有引用，在使用框架的时候，应该直接引用这个根头文件，而不是其他子模块的头文件，即使是只用到了其中一小部分，编译器会自动完成优化
+		
+		//正确，引用根头文件
+		#import <Foundation/Foundation.h>
+		
+		//错误，不要单独引用框架内其他的头文件
+		#import <Foundation/NSArray.h>
+		
+- **BOOL的使用**<br/>
+	BOOL在Objective-C中被定义成`signed char`类型，意味着一个BOOL类型的变量不仅仅可以表示YES（1）和NO（0）两个值，所以永远不要讲BOOL类型变量直接和YES比较
+		
+		//错误，无法确定|great|的值是否是YES（1），不要将BOOL值直接与YES比较
+		BOOL great = [foo isGreat];
+		if (great == YES)
+			//...
+		
+		//正确
+		BOOL great = [foo isGreat];
+		if (great)
+			//...
+		
+	同样，也不要将其他类型的值作为BOOL来返回，这种情况下，BOOL变量只会取值的最后一个字节来赋值，这样很可能会取到0（NO）。但是，一些逻辑操作符如&&，||，！的返回值是可以直接赋给BOOL的<br/>
+	另外，BOOL类型可以和_Bool,bool相互转化，但是不能喝Boolean转化。
+	
+- **使用ARC**<br/>
+	除非想要兼容一些古董级的机器和操作系统，没有理由放弃使用ARC
+	
+- **在init和dealloc中不要使用存取方法访问实例变量**<br/>
+	当init和dealloc方法被执行时，类的运行时环境不是处于正常状态，使用存取方法访问变量可能会导致不可预测的结果，因此应当在这两个方法内直接访问实例变量 `_xxxx`
+
+- **按照定义的顺序释放资源**<br/>
+	在类或者Controller的生命周期结束时，往往需要做一些扫尾工作，比如释放资源，停止线程等，这些扫尾工作的释放顺序应当与它们的初始化或者定义的顺序保持一致。这样方便调试时寻找错误，也能防止遗漏。
+
+- **保证NSString在赋值时被复制**<br/>
+	NSString非常常用，在它被传递或者赋值时应当保证是以复制（copy）的方式进行的，这样可以防止在不知情的情况下String的值被其他对象修改。
+		
+		- (void)setFoo:(NSString *)aFoo {
+			_foo = [aFoo copy];
+		}
+		
+- **使用NSNumber的语法糖**<br/>
+	使用带有@符号的语法糖来生成NSNumber对象能使代码更简洁
+			
+			NSNumber *fortyTwo = @42;
+			NSNumber *piOverTow = @(M_PI / 2);
+			enum {
+				kMyEnum = 2;
+			};
+			NSNumber *myEnum = @(kMyEnum);
+- **nil检查**<br/>		
+	因为在Objective-C中向nil对象发送命令是不会抛出异常或者导致崩溃的，只是完全的“什么都不干”，所以，只在程序中使用nil来做逻辑上的检查。<br/>
+	另外，不要使用诸如 `nil == Object`或者`Object == nil`的形式来判断
+		
+		//正确，直接判断
+		if (!objc) {
+			...
+		} 
+		
+		//错误，不要使用 nil == Object 的形式
+		if (nil == objc) {
+			...
+		}
+	
+- **属性的线程安全**<br/>
+	定义一个属性时，编译器会自动生成线程安全的存取方法（Atomic），但这样会大大降低性能，特别是对于那些需要频繁存取的属性来说，是极大的浪费。所以，如果定义的属性不需要线程保护，记得手动添加属性关键字nonatomic来取消编译器的优化。
+
+- **点分语法的使用**<br/>
+	不要用点分语法来调用方法，只用来访问属性。这样是为了防止代码可读性的问题。
+	
+- **Delegate要使用弱引用**<br/>
+	一个类的Delegate对象通常还引用这类本身，这样容易造成循环引用的问题，所以类的Delegate属性要设置为弱引用。
+		
+		/** delegate **/
+		@property (nonatomic, weak) id <IPConnectHandlerDelegate> delegate;
+		
 
 ***
 Reference:<br/>
